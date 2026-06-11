@@ -19,6 +19,7 @@
       --danger: #b91c1c;
       --ok-bg: #ecfdf5;
       --ok-border: #34d399;
+      --muted-bg: #f3f4f6;
     }
 
     * {
@@ -50,7 +51,7 @@
     }
 
     main {
-      width: min(920px, 100%);
+      width: min(980px, 100%);
       margin: 0 auto;
       padding: 16px;
     }
@@ -74,6 +75,12 @@
       font-size: 18px;
     }
 
+    .card h3 {
+      margin: 18px 0 8px;
+      font-size: 15px;
+      color: var(--text);
+    }
+
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -87,7 +94,7 @@
       font-weight: 700;
     }
 
-    input {
+    input, select {
       width: 100%;
       margin-top: 5px;
       padding: 10px 11px;
@@ -97,13 +104,22 @@
       background: #fff;
     }
 
-    input:focus {
+    input:focus, select:focus {
       outline: 2px solid rgba(37, 99, 235, 0.22);
       border-color: var(--main);
     }
 
     .hint {
       margin-top: 8px;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .mode-note {
+      margin: 10px 0 0;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--muted-bg);
       color: var(--sub);
       font-size: 13px;
     }
@@ -189,7 +205,7 @@
     .small-table th {
       color: var(--sub);
       font-weight: 700;
-      width: 48%;
+      width: 50%;
     }
 
     .error {
@@ -203,7 +219,11 @@
       font-size: 13px;
     }
 
-    @media (max-width: 720px) {
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 760px) {
       .grid, .row, .actions {
         grid-template-columns: 1fr;
       }
@@ -217,7 +237,7 @@
 <body>
   <header>
     <h1>酢酸エチル・ヘキサン混合比 計算ツール</h1>
-    <p>現在の混合液から、目標比にするための追加量・取り分け量を計算します。</p>
+    <p>NMR積分比または体積比から、目標比にするための追加量・取り分け量を計算します。</p>
   </header>
 
   <main>
@@ -225,35 +245,109 @@
       <div class="card">
         <h2>現在の混合溶液</h2>
 
-        <div class="row">
-          <div>
-            <label for="currentEA">現在の酢酸エチル比</label>
-            <input id="currentEA" type="number" min="0" step="any" value="9" />
+        <label for="currentInputMode">現在比の入力方法</label>
+        <select id="currentInputMode" onchange="toggleInputMode()">
+          <option value="nmr" selected>NMR積分比から計算する</option>
+          <option value="volume">体積比を直接入力する</option>
+        </select>
+
+        <div id="nmrCurrentBlock">
+          <h3>NMR積分比</h3>
+          <div class="row">
+            <div>
+              <label for="currentEAIntegral">酢酸エチルの積分比</label>
+              <input id="currentEAIntegral" type="number" min="0" step="any" value="9" />
+            </div>
+            <div>
+              <label for="currentHexIntegral">ヘキサンの積分比</label>
+              <input id="currentHexIntegral" type="number" min="0" step="any" value="1" />
+            </div>
           </div>
-          <div>
-            <label for="currentHex">現在のヘキサン比</label>
-            <input id="currentHex" type="number" min="0" step="any" value="1" />
+
+          <h3>物性値</h3>
+          <div class="row">
+            <div>
+              <label for="eaMW">酢酸エチルのモル質量 g/mol</label>
+              <input id="eaMW" type="number" min="0" step="any" value="88.11" />
+            </div>
+            <div>
+              <label for="hexMW">ヘキサンのモル質量 g/mol</label>
+              <input id="hexMW" type="number" min="0" step="any" value="86.18" />
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label for="eaDensity">酢酸エチルの密度 g/mL</label>
+              <input id="eaDensity" type="number" min="0" step="any" value="0.902" />
+            </div>
+            <div>
+              <label for="hexDensity">ヘキサンの密度 g/mL</label>
+              <input id="hexDensity" type="number" min="0" step="any" value="0.659" />
+            </div>
+          </div>
+
+          <p class="mode-note">
+            NMR積分比をモル比として扱い、各成分の体積を「体積 = 物質量 × モル質量 ÷ 密度」で計算します。
+          </p>
+        </div>
+
+        <div id="volumeCurrentBlock" class="hidden">
+          <h3>体積比</h3>
+          <div class="row">
+            <div>
+              <label for="currentEAVolRatio">現在の酢酸エチル体積比</label>
+              <input id="currentEAVolRatio" type="number" min="0" step="any" value="9" />
+            </div>
+            <div>
+              <label for="currentHexVolRatio">現在のヘキサン体積比</label>
+              <input id="currentHexVolRatio" type="number" min="0" step="any" value="1" />
+            </div>
           </div>
         </div>
 
         <label for="totalVolume">現在の全体積 mL</label>
         <input id="totalVolume" type="number" min="0" step="any" value="10" />
-
-        <p class="hint">例：酢酸エチル：ヘキサン = 9：1、全体積 10 mL</p>
       </div>
 
       <div class="card">
         <h2>目標条件</h2>
 
-        <div class="row">
-          <div>
-            <label for="targetEA">目標の酢酸エチル比</label>
-            <input id="targetEA" type="number" min="0" step="any" value="1" />
+        <label for="targetInputMode">目標比の入力方法</label>
+        <select id="targetInputMode" onchange="toggleInputMode()">
+          <option value="volume" selected>体積比で入力する</option>
+          <option value="nmr">NMR積分比から計算する</option>
+        </select>
+
+        <div id="targetVolumeBlock">
+          <h3>目標体積比</h3>
+          <div class="row">
+            <div>
+              <label for="targetEAVolRatio">目標の酢酸エチル体積比</label>
+              <input id="targetEAVolRatio" type="number" min="0" step="any" value="1" />
+            </div>
+            <div>
+              <label for="targetHexVolRatio">目標のヘキサン体積比</label>
+              <input id="targetHexVolRatio" type="number" min="0" step="any" value="9" />
+            </div>
           </div>
-          <div>
-            <label for="targetHex">目標のヘキサン比</label>
-            <input id="targetHex" type="number" min="0" step="any" value="9" />
+        </div>
+
+        <div id="targetNmrBlock" class="hidden">
+          <h3>目標NMR積分比</h3>
+          <div class="row">
+            <div>
+              <label for="targetEAIntegral">目標の酢酸エチル積分比</label>
+              <input id="targetEAIntegral" type="number" min="0" step="any" value="1" />
+            </div>
+            <div>
+              <label for="targetHexIntegral">目標のヘキサン積分比</label>
+              <input id="targetHexIntegral" type="number" min="0" step="any" value="9" />
+            </div>
           </div>
+          <p class="mode-note">
+            目標もNMR積分比で入力した場合、左の物性値を使って目標体積比へ変換します。
+          </p>
         </div>
 
         <label for="portionFinalVolume">取り分け調製で作りたい最終体積 mL</label>
@@ -276,7 +370,7 @@
     </section>
 
     <p class="footer-note">
-      ※この計算は体積加成性を仮定しています。厳密な密度変化や体積収縮は考慮していません。
+      ※NMR積分比をそのまま物質量比として扱うには、比較しているシグナルのプロトン数が同じ、またはプロトン数で補正済みである必要があります。密度は温度で変わるため、必要なら実験条件の値に直してください。体積加成性を仮定しており、体積収縮は考慮していません。
     </p>
   </main>
 
@@ -287,10 +381,20 @@
       return Number(document.getElementById(id).value);
     }
 
+    function value(id) {
+      return document.getElementById(id).value;
+    }
+
     function fmt(x) {
       if (!Number.isFinite(x)) return "-";
       if (Math.abs(x) < 0.0000001) x = 0;
       return x.toFixed(2);
+    }
+
+    function fmtRatio(x) {
+      if (!Number.isFinite(x)) return "-";
+      if (Math.abs(x) < 0.0000001) x = 0;
+      return x.toFixed(4);
     }
 
     function solventName(addEA, addHex) {
@@ -299,44 +403,126 @@
       return "なし";
     }
 
-    function calculate() {
-      const currentEA = n("currentEA");
-      const currentHex = n("currentHex");
-      const totalVolume = n("totalVolume");
-      const targetEA = n("targetEA");
-      const targetHex = n("targetHex");
+    function show(id, visible) {
+      document.getElementById(id).classList.toggle("hidden", !visible);
+    }
 
-      const portionInput = document.getElementById("portionFinalVolume").value;
+    function toggleInputMode() {
+      const currentMode = value("currentInputMode");
+      const targetMode = value("targetInputMode");
+
+      show("nmrCurrentBlock", currentMode === "nmr");
+      show("volumeCurrentBlock", currentMode === "volume");
+
+      show("targetVolumeBlock", targetMode === "volume");
+      show("targetNmrBlock", targetMode === "nmr");
+    }
+
+    function validatePositive(numbers) {
+      return numbers.every(x => Number.isFinite(x) && x > 0);
+    }
+
+    function nmrToVolumeRatio(eaIntegral, hexIntegral, eaMW, hexMW, eaDensity, hexDensity) {
+      const eaVolUnit = eaIntegral * eaMW / eaDensity;
+      const hexVolUnit = hexIntegral * hexMW / hexDensity;
+      return {
+        eaRatio: eaVolUnit,
+        hexRatio: hexVolUnit,
+        eaFraction: eaVolUnit / (eaVolUnit + hexVolUnit),
+        hexFraction: hexVolUnit / (eaVolUnit + hexVolUnit)
+      };
+    }
+
+    function volumeRatioToFraction(eaRatio, hexRatio) {
+      return {
+        eaRatio,
+        hexRatio,
+        eaFraction: eaRatio / (eaRatio + hexRatio),
+        hexFraction: hexRatio / (eaRatio + hexRatio)
+      };
+    }
+
+    function getCurrentRatio() {
+      const mode = value("currentInputMode");
+      if (mode === "nmr") {
+        return nmrToVolumeRatio(
+          n("currentEAIntegral"),
+          n("currentHexIntegral"),
+          n("eaMW"),
+          n("hexMW"),
+          n("eaDensity"),
+          n("hexDensity")
+        );
+      }
+      return volumeRatioToFraction(n("currentEAVolRatio"), n("currentHexVolRatio"));
+    }
+
+    function getTargetRatio() {
+      const mode = value("targetInputMode");
+      if (mode === "nmr") {
+        return nmrToVolumeRatio(
+          n("targetEAIntegral"),
+          n("targetHexIntegral"),
+          n("eaMW"),
+          n("hexMW"),
+          n("eaDensity"),
+          n("hexDensity")
+        );
+      }
+      return volumeRatioToFraction(n("targetEAVolRatio"), n("targetHexVolRatio"));
+    }
+
+    function calculate() {
+      const currentMode = value("currentInputMode");
+      const targetMode = value("targetInputMode");
+      const totalVolume = n("totalVolume");
+      const portionInput = value("portionFinalVolume");
       const desiredFinalVolume = portionInput === "" ? totalVolume : Number(portionInput);
 
       const result = document.getElementById("result");
 
-      if (
-        currentEA <= 0 || currentHex <= 0 ||
-        totalVolume <= 0 ||
-        targetEA <= 0 || targetHex <= 0 ||
-        desiredFinalVolume <= 0
-      ) {
+      const commonValues = [totalVolume, desiredFinalVolume];
+
+      if (currentMode === "nmr" || targetMode === "nmr") {
+        commonValues.push(n("eaMW"), n("hexMW"), n("eaDensity"), n("hexDensity"));
+      }
+
+      if (currentMode === "nmr") {
+        commonValues.push(n("currentEAIntegral"), n("currentHexIntegral"));
+      } else {
+        commonValues.push(n("currentEAVolRatio"), n("currentHexVolRatio"));
+      }
+
+      if (targetMode === "nmr") {
+        commonValues.push(n("targetEAIntegral"), n("targetHexIntegral"));
+      } else {
+        commonValues.push(n("targetEAVolRatio"), n("targetHexVolRatio"));
+      }
+
+      if (!validatePositive(commonValues)) {
         result.innerHTML = `
           <div class="result-card warn">
             <h3>入力エラー</h3>
-            <p class="error">すべて正の数を入力してください。</p>
+            <p class="error">表示されている入力欄には、すべて正の数を入力してください。</p>
           </div>
         `;
         return;
       }
 
-      const currentEAFraction = currentEA / (currentEA + currentHex);
-      const currentHexFraction = currentHex / (currentEA + currentHex);
-      const targetEAFraction = targetEA / (targetEA + targetHex);
-      const targetHexFraction = targetHex / (targetEA + targetHex);
+      const current = getCurrentRatio();
+      const target = getTargetRatio();
+
+      const currentEAFraction = current.eaFraction;
+      const currentHexFraction = current.hexFraction;
+      const targetEAFraction = target.eaFraction;
+      const targetHexFraction = target.hexFraction;
 
       const currentEAVolume = totalVolume * currentEAFraction;
       const currentHexVolume = totalVolume * currentHexFraction;
 
       // 方法1：今ある全量に、そのまま片方だけを足す
-      const addEA_direct = Math.max(0, currentHexVolume * targetEA / targetHex - currentEAVolume);
-      const addHex_direct = Math.max(0, currentEAVolume * targetHex / targetEA - currentHexVolume);
+      const addEA_direct = Math.max(0, currentHexVolume * targetEAFraction / targetHexFraction - currentEAVolume);
+      const addHex_direct = Math.max(0, currentEAVolume * targetHexFraction / targetEAFraction - currentHexVolume);
       const directAddVolume = addEA_direct + addHex_direct;
       const directFinalTotal = totalVolume + directAddVolume;
 
@@ -350,14 +536,12 @@
       let portionWarning = "";
 
       if (Math.abs(currentEAFraction - targetEAFraction) < 0.0000001) {
-        // すでに目標比
         takeVolume = Math.min(totalVolume, desiredFinalVolume);
 
         if (desiredFinalVolume <= totalVolume) {
           addEA_portion = 0;
           addHex_portion = 0;
         } else {
-          // 目標比のまま増量する場合は、純溶媒1種類だけでは比を保てない
           portionWarning = "すでに目標比ですが、指定した最終体積が現在量より大きいため、酢酸エチルとヘキサンの両方を目標比で加える必要があります。";
         }
       } else if (currentEAFraction > targetEAFraction) {
@@ -386,7 +570,25 @@
       const directSolvent = solventName(addEA_direct, addHex_direct);
       const portionSolvent = solventName(addEA_portion, addHex_portion);
 
+      const ratioExplanation = `
+        <div class="result-card">
+          <h3>現在比・目標比の変換結果</h3>
+          <table class="small-table">
+            <tr><th>現在の酢酸エチル体積比</th><td>${fmtRatio(current.eaRatio)}</td></tr>
+            <tr><th>現在のヘキサン体積比</th><td>${fmtRatio(current.hexRatio)}</td></tr>
+            <tr><th>現在の酢酸エチル割合</th><td>${fmt(currentEAFraction * 100)} %</td></tr>
+            <tr><th>現在のヘキサン割合</th><td>${fmt(currentHexFraction * 100)} %</td></tr>
+            <tr><th>目標の酢酸エチル体積比</th><td>${fmtRatio(target.eaRatio)}</td></tr>
+            <tr><th>目標のヘキサン体積比</th><td>${fmtRatio(target.hexRatio)}</td></tr>
+            <tr><th>目標の酢酸エチル割合</th><td>${fmt(targetEAFraction * 100)} %</td></tr>
+            <tr><th>目標のヘキサン割合</th><td>${fmt(targetHexFraction * 100)} %</td></tr>
+          </table>
+        </div>
+      `;
+
       result.innerHTML = `
+        ${ratioExplanation}
+
         <div class="result-card recommend">
           <h3>おすすめ</h3>
           <div class="big">${recommendation}</div>
@@ -435,15 +637,34 @@
     }
 
     function resetExample() {
-      document.getElementById("currentEA").value = 9;
-      document.getElementById("currentHex").value = 1;
+      document.getElementById("currentInputMode").value = "nmr";
+      document.getElementById("targetInputMode").value = "volume";
+
+      document.getElementById("currentEAIntegral").value = 9;
+      document.getElementById("currentHexIntegral").value = 1;
+
+      document.getElementById("currentEAVolRatio").value = 9;
+      document.getElementById("currentHexVolRatio").value = 1;
+
+      document.getElementById("eaMW").value = 88.11;
+      document.getElementById("hexMW").value = 86.18;
+      document.getElementById("eaDensity").value = 0.902;
+      document.getElementById("hexDensity").value = 0.659;
+
       document.getElementById("totalVolume").value = 10;
-      document.getElementById("targetEA").value = 1;
-      document.getElementById("targetHex").value = 9;
+
+      document.getElementById("targetEAVolRatio").value = 1;
+      document.getElementById("targetHexVolRatio").value = 9;
+      document.getElementById("targetEAIntegral").value = 1;
+      document.getElementById("targetHexIntegral").value = 9;
+
       document.getElementById("portionFinalVolume").value = "";
+
+      toggleInputMode();
       calculate();
     }
 
+    toggleInputMode();
     calculate();
   </script>
 </body>
