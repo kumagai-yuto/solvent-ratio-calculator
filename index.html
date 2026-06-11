@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>カラム溶媒比 計算ツール</title>
+
+  <title>カラム溶媒比計算ツール｜NMR積分比から体積比・追加量を計算</title>
+  <meta name="description" content="カラムクロマトグラフィーで使う混合溶媒の比率を計算する無料ツールです。NMR積分比または体積比から、目標比にするために加える溶媒量や取り分け調製量を計算できます。">
+  <meta name="keywords" content="カラム, 溶媒比, カラムクロマトグラフィー, NMR, 積分比, 体積比, ヘキサン, 酢酸エチル, ジクロロメタン, メタノール, 混合溶媒, 計算ツール">
+
+  <meta property="og:title" content="カラム溶媒比計算ツール｜NMR積分比から体積比・追加量を計算">
+  <meta property="og:description" content="カラムクロマトグラフィーで使う混合溶媒の比率を、NMR積分比または体積比から計算できます。追加量・取り分け調製量にも対応。">
+  <meta property="og:type" content="website">
+
   <style>
     :root {
       --bg: #f6f7fb;
@@ -33,19 +41,21 @@
     }
 
     header {
-      padding: 28px 16px 16px;
+      padding: 30px 16px 18px;
       text-align: center;
     }
 
     header h1 {
       margin: 0;
-      font-size: 24px;
+      font-size: 25px;
+      line-height: 1.35;
     }
 
     header p {
-      margin: 8px 0 0;
+      width: min(760px, 100%);
+      margin: 10px auto 0;
       color: var(--sub);
-      font-size: 14px;
+      font-size: 15px;
     }
 
     main {
@@ -214,6 +224,35 @@
       font-size: 13px;
     }
 
+    .description-section {
+      margin-top: 18px;
+      background: var(--card);
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .description-section h2 {
+      margin: 0 0 10px;
+      font-size: 19px;
+    }
+
+    .description-section p {
+      margin: 10px 0;
+      color: #374151;
+    }
+
+    .description-section ul {
+      margin: 10px 0 0;
+      padding-left: 1.2em;
+      color: #374151;
+    }
+
+    .description-section li {
+      margin: 5px 0;
+    }
+
     .hidden { display: none; }
 
     @media (max-width: 780px) {
@@ -224,8 +263,11 @@
 </head>
 <body>
   <header>
-    <h1>カラム溶媒比 計算ツール</h1>
-    <p>よく使うカラム溶媒の組み合わせで、NMR積分比または体積比から追加量・取り分け量を計算します。</p>
+    <h1>カラム溶媒比計算ツール</h1>
+    <p>
+      カラムクロマトグラフィーで使う混合溶媒の比率を計算するツールです。
+      NMR積分比または体積比から、目標比にするために加える溶媒量や、取り分け調製量を計算できます。
+    </p>
   </header>
 
   <main>
@@ -418,8 +460,34 @@
       </div>
     </section>
 
+    <section class="description-section">
+      <h2>このツールについて</h2>
+      <p>
+        このツールは、カラムクロマトグラフィーで使用する混合溶媒の比率を調整するための計算ツールです。
+        ヘキサン/酢酸エチル、ジクロロメタン/メタノール、トルエン/酢酸エチルなど、よく使われる溶媒系について、
+        現在の混合比から目標の混合比にするために必要な追加量を計算できます。
+      </p>
+      <p>
+        現在の混合比は、体積比として直接入力することも、NMR積分比から計算することもできます。
+        NMR積分比を使用する場合は、各溶媒のモル質量、密度、対象ピークの水素数を用いて体積比に変換します。
+      </p>
+      <p>
+        計算結果では、今ある混合液にそのまま溶媒を加える方法に加えて、
+        加える量が多くなりすぎる場合に備えた取り分け調製の方法も表示します。
+        取り分け調製では、混合液を何 mL取り、どちらの溶媒を何 mL加えれば、
+        指定した最終体積と目標比になるかを計算します。
+      </p>
+      <h2>注意事項</h2>
+      <ul>
+        <li>NMR積分比を使う場合、比較するピークの積分値は対象ピークの水素数で補正する必要があります。</li>
+        <li>ピークが重なっている場合や積分値が正確でない場合は、計算される体積比もずれる可能性があります。</li>
+        <li>この計算では体積加成性を仮定しており、混合による体積収縮は考慮していません。</li>
+        <li>密度は温度や試薬の規格によって変わるため、必要に応じて使用する試薬のSDSや実験条件に合わせて修正してください。</li>
+      </ul>
+    </section>
+
     <p class="footer-note">
-      ※NMR積分値を使う場合は、比較するピークが重なっていないこと、対象ピークのH数で補正することが重要です。密度は温度で変わるため、必要に応じて実験条件の値に修正してください。体積加成性を仮定しており、体積収縮は考慮していません。
+      ※本ツールは実験補助用の簡易計算ツールです。実際の調製では、使用する試薬の安全データシート、実験室の安全ルール、廃液処理ルールに従ってください。
     </p>
   </main>
 
