@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>酢酸エチル・ヘキサン混合比 計算ツール</title>
+  <title>カラム溶媒比 計算ツール</title>
   <style>
     :root {
       --bg: #f6f7fb;
@@ -22,9 +22,7 @@
       --muted-bg: #f3f4f6;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -51,7 +49,7 @@
     }
 
     main {
-      width: min(980px, 100%);
+      width: min(1040px, 100%);
       margin: 0 auto;
       padding: 16px;
     }
@@ -145,9 +143,7 @@
       background: var(--main);
     }
 
-    .primary:hover {
-      background: var(--main-dark);
-    }
+    .primary:hover { background: var(--main-dark); }
 
     .secondary {
       color: var(--text);
@@ -195,8 +191,7 @@
       font-size: 14px;
     }
 
-    .small-table th,
-    .small-table td {
+    .small-table th, .small-table td {
       padding: 7px 8px;
       border-bottom: 1px solid rgba(0,0,0,0.08);
       text-align: left;
@@ -219,29 +214,87 @@
       font-size: 13px;
     }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
 
-    @media (max-width: 760px) {
-      .grid, .row, .actions {
-        grid-template-columns: 1fr;
-      }
-
-      header h1 {
-        font-size: 21px;
-      }
+    @media (max-width: 780px) {
+      .grid, .row, .actions { grid-template-columns: 1fr; }
+      header h1 { font-size: 21px; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>酢酸エチル・ヘキサン混合比 計算ツール</h1>
-    <p>NMR積分比または体積比から、目標比にするための追加量・取り分け量を計算します。</p>
+    <h1>カラム溶媒比 計算ツール</h1>
+    <p>よく使うカラム溶媒の組み合わせで、NMR積分比または体積比から追加量・取り分け量を計算します。</p>
   </header>
 
   <main>
-    <section class="grid">
+    <section class="card">
+      <h2>溶媒の選択</h2>
+
+      <label for="pairPreset">よくある組み合わせ</label>
+      <select id="pairPreset" onchange="applyPairPreset()">
+        <option value="hexane|ethyl_acetate">ヘキサン / 酢酸エチル</option>
+        <option value="heptane|ethyl_acetate">ヘプタン / 酢酸エチル</option>
+        <option value="petroleum_ether|ethyl_acetate">石油エーテル / 酢酸エチル（石油エーテルは目安）</option>
+        <option value="dcm|methanol">ジクロロメタン / メタノール</option>
+        <option value="chloroform|methanol">クロロホルム / メタノール</option>
+        <option value="toluene|ethyl_acetate">トルエン / 酢酸エチル</option>
+        <option value="hexane|dcm">ヘキサン / ジクロロメタン</option>
+        <option value="dcm|ethyl_acetate">ジクロロメタン / 酢酸エチル</option>
+        <option value="hexane|acetone">ヘキサン / アセトン</option>
+        <option value="ethyl_acetate|methanol">酢酸エチル / メタノール</option>
+        <option value="toluene|acetone">トルエン / アセトン</option>
+        <option value="diethyl_ether|hexane">ジエチルエーテル / ヘキサン</option>
+        <option value="mtbe|hexane">MTBE / ヘキサン</option>
+        <option value="thf|hexane">THF / ヘキサン</option>
+        <option value="custom">自由入力</option>
+      </select>
+
+      <p id="customNote" class="mode-note hidden">
+        自由入力モードです。溶媒名は入力せず、溶媒A・溶媒Bとして扱います。モル質量・密度・対象ピークH数を入力してください。
+      </p>
+
+      <div id="solventSelectBlock" class="row">
+        <div>
+          <label for="solventA">溶媒A</label>
+          <select id="solventA" onchange="applySolvent('A')"></select>
+        </div>
+        <div>
+          <label for="solventB">溶媒B</label>
+          <select id="solventB" onchange="applySolvent('B')"></select>
+        </div>
+      </div>
+
+      <h3>物性値</h3>
+      <div class="row">
+        <div>
+          <label id="mwALabel" for="mwA">溶媒Aのモル質量 g/mol</label>
+          <input id="mwA" type="number" min="0" step="any" value="86.18" />
+        </div>
+        <div>
+          <label id="mwBLabel" for="mwB">溶媒Bのモル質量 g/mol</label>
+          <input id="mwB" type="number" min="0" step="any" value="88.11" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label id="densityALabel" for="densityA">溶媒Aの密度 g/mL</label>
+          <input id="densityA" type="number" min="0" step="any" value="0.659" />
+        </div>
+        <div>
+          <label id="densityBLabel" for="densityB">溶媒Bの密度 g/mL</label>
+          <input id="densityB" type="number" min="0" step="any" value="0.902" />
+        </div>
+      </div>
+
+      <p class="mode-note">
+        物性値は初期値を入れていますが、メーカー・温度・純度で変わることがあります。特に石油エーテルは混合物なので目安です。必要なら手入力で修正してください。
+      </p>
+    </section>
+
+    <section class="grid" style="margin-top: 16px;">
       <div class="card">
         <h2>現在の混合溶液</h2>
 
@@ -255,40 +308,28 @@
           <h3>NMR積分比</h3>
           <div class="row">
             <div>
-              <label for="currentEAIntegral">酢酸エチルの積分比</label>
-              <input id="currentEAIntegral" type="number" min="0" step="any" value="9" />
+              <label id="currentIntegralALabel" for="currentAIntegral">溶媒Aの積分値</label>
+              <input id="currentAIntegral" type="number" min="0" step="any" value="1" />
             </div>
             <div>
-              <label for="currentHexIntegral">ヘキサンの積分比</label>
-              <input id="currentHexIntegral" type="number" min="0" step="any" value="1" />
-            </div>
-          </div>
-
-          <h3>物性値</h3>
-          <div class="row">
-            <div>
-              <label for="eaMW">酢酸エチルのモル質量 g/mol</label>
-              <input id="eaMW" type="number" min="0" step="any" value="88.11" />
-            </div>
-            <div>
-              <label for="hexMW">ヘキサンのモル質量 g/mol</label>
-              <input id="hexMW" type="number" min="0" step="any" value="86.18" />
+              <label id="currentIntegralBLabel" for="currentBIntegral">溶媒Bの積分値</label>
+              <input id="currentBIntegral" type="number" min="0" step="any" value="1" />
             </div>
           </div>
 
           <div class="row">
             <div>
-              <label for="eaDensity">酢酸エチルの密度 g/mL</label>
-              <input id="eaDensity" type="number" min="0" step="any" value="0.902" />
+              <label id="currentProtonsALabel" for="currentAProtons">溶媒Aの対象ピークH数</label>
+              <input id="currentAProtons" type="number" min="0" step="any" value="6" />
             </div>
             <div>
-              <label for="hexDensity">ヘキサンの密度 g/mL</label>
-              <input id="hexDensity" type="number" min="0" step="any" value="0.659" />
+              <label id="currentProtonsBLabel" for="currentBProtons">溶媒Bの対象ピークH数</label>
+              <input id="currentBProtons" type="number" min="0" step="any" value="3" />
             </div>
           </div>
 
           <p class="mode-note">
-            NMR積分比をモル比として扱い、各成分の体積を「体積 = 物質量 × モル質量 ÷ 密度」で計算します。
+            NMR積分値 ÷ 対象ピークのH数 = 物質量比として計算します。すでにH数補正済みならH数は両方1にしてください。
           </p>
         </div>
 
@@ -296,12 +337,12 @@
           <h3>体積比</h3>
           <div class="row">
             <div>
-              <label for="currentEAVolRatio">現在の酢酸エチル体積比</label>
-              <input id="currentEAVolRatio" type="number" min="0" step="any" value="9" />
+              <label id="currentVolALabel" for="currentAVolRatio">現在の溶媒A体積比</label>
+              <input id="currentAVolRatio" type="number" min="0" step="any" value="9" />
             </div>
             <div>
-              <label for="currentHexVolRatio">現在のヘキサン体積比</label>
-              <input id="currentHexVolRatio" type="number" min="0" step="any" value="1" />
+              <label id="currentVolBLabel" for="currentBVolRatio">現在の溶媒B体積比</label>
+              <input id="currentBVolRatio" type="number" min="0" step="any" value="1" />
             </div>
           </div>
         </div>
@@ -323,12 +364,12 @@
           <h3>目標体積比</h3>
           <div class="row">
             <div>
-              <label for="targetEAVolRatio">目標の酢酸エチル体積比</label>
-              <input id="targetEAVolRatio" type="number" min="0" step="any" value="1" />
+              <label id="targetVolALabel" for="targetAVolRatio">目標の溶媒A体積比</label>
+              <input id="targetAVolRatio" type="number" min="0" step="any" value="9" />
             </div>
             <div>
-              <label for="targetHexVolRatio">目標のヘキサン体積比</label>
-              <input id="targetHexVolRatio" type="number" min="0" step="any" value="9" />
+              <label id="targetVolBLabel" for="targetBVolRatio">目標の溶媒B体積比</label>
+              <input id="targetBVolRatio" type="number" min="0" step="any" value="1" />
             </div>
           </div>
         </div>
@@ -337,17 +378,25 @@
           <h3>目標NMR積分比</h3>
           <div class="row">
             <div>
-              <label for="targetEAIntegral">目標の酢酸エチル積分比</label>
-              <input id="targetEAIntegral" type="number" min="0" step="any" value="1" />
+              <label id="targetIntegralALabel" for="targetAIntegral">目標の溶媒A積分値</label>
+              <input id="targetAIntegral" type="number" min="0" step="any" value="1" />
             </div>
             <div>
-              <label for="targetHexIntegral">目標のヘキサン積分比</label>
-              <input id="targetHexIntegral" type="number" min="0" step="any" value="9" />
+              <label id="targetIntegralBLabel" for="targetBIntegral">目標の溶媒B積分値</label>
+              <input id="targetBIntegral" type="number" min="0" step="any" value="1" />
             </div>
           </div>
-          <p class="mode-note">
-            目標もNMR積分比で入力した場合、左の物性値を使って目標体積比へ変換します。
-          </p>
+
+          <div class="row">
+            <div>
+              <label id="targetProtonsALabel" for="targetAProtons">溶媒Aの対象ピークH数</label>
+              <input id="targetAProtons" type="number" min="0" step="any" value="6" />
+            </div>
+            <div>
+              <label id="targetProtonsBLabel" for="targetBProtons">溶媒Bの対象ピークH数</label>
+              <input id="targetBProtons" type="number" min="0" step="any" value="3" />
+            </div>
+          </div>
         </div>
 
         <label for="portionFinalVolume">取り分け調製で作りたい最終体積 mL</label>
@@ -370,20 +419,46 @@
     </section>
 
     <p class="footer-note">
-      ※NMR積分比をそのまま物質量比として扱うには、比較しているシグナルのプロトン数が同じ、またはプロトン数で補正済みである必要があります。密度は温度で変わるため、必要なら実験条件の値に直してください。体積加成性を仮定しており、体積収縮は考慮していません。
+      ※NMR積分値を使う場合は、比較するピークが重なっていないこと、対象ピークのH数で補正することが重要です。密度は温度で変わるため、必要に応じて実験条件の値に修正してください。体積加成性を仮定しており、体積収縮は考慮していません。
     </p>
   </main>
 
   <script>
-    const LARGE_ADDITION_RATIO = 0.5; // 加える量が現在量の50%以上なら取り分け調製をおすすめする
+    const LARGE_ADDITION_RATIO = 0.5;
 
-    function n(id) {
-      return Number(document.getElementById(id).value);
+    const solvents = {
+      hexane: { name: "ヘキサン", mw: 86.18, density: 0.659, protons: 6 },
+      heptane: { name: "ヘプタン", mw: 100.20, density: 0.684, protons: 6 },
+      petroleum_ether: { name: "石油エーテル", mw: 86.18, density: 0.640, protons: 6 },
+      ethyl_acetate: { name: "酢酸エチル", mw: 88.11, density: 0.902, protons: 3 },
+      dcm: { name: "ジクロロメタン", mw: 84.93, density: 1.326, protons: 2 },
+      chloroform: { name: "クロロホルム", mw: 119.37, density: 1.489, protons: 1 },
+      methanol: { name: "メタノール", mw: 32.04, density: 0.792, protons: 3 },
+      ethanol: { name: "エタノール", mw: 46.07, density: 0.789, protons: 3 },
+      acetone: { name: "アセトン", mw: 58.08, density: 0.785, protons: 6 },
+      toluene: { name: "トルエン", mw: 92.14, density: 0.867, protons: 3 },
+      diethyl_ether: { name: "ジエチルエーテル", mw: 74.12, density: 0.713, protons: 6 },
+      mtbe: { name: "MTBE", mw: 88.15, density: 0.740, protons: 9 },
+      thf: { name: "THF", mw: 72.11, density: 0.889, protons: 4 },
+      acetonitrile: { name: "アセトニトリル", mw: 41.05, density: 0.786, protons: 3 }
+    };
+
+    let labelA = "ヘキサン";
+    let labelB = "酢酸エチル";
+    let isCustomMode = false;
+
+    function initSolventSelects() {
+      const options = Object.entries(solvents).map(([key, s]) => `<option value="${key}">${s.name}</option>`).join("");
+      document.getElementById("solventA").innerHTML = options;
+      document.getElementById("solventB").innerHTML = options;
+      document.getElementById("solventA").value = "hexane";
+      document.getElementById("solventB").value = "ethyl_acetate";
+      applySolvent("A", false);
+      applySolvent("B", false);
     }
 
-    function value(id) {
-      return document.getElementById(id).value;
-    }
+    function n(id) { return Number(document.getElementById(id).value); }
+    function value(id) { return document.getElementById(id).value; }
 
     function fmt(x) {
       if (!Number.isFinite(x)) return "-";
@@ -397,14 +472,101 @@
       return x.toFixed(4);
     }
 
-    function solventName(addEA, addHex) {
-      if (addEA > addHex) return "酢酸エチル";
-      if (addHex > addEA) return "ヘキサン";
+    function solventName(addA, addB) {
+      if (addA > addB) return labelA;
+      if (addB > addA) return labelB;
       return "なし";
     }
 
     function show(id, visible) {
       document.getElementById(id).classList.toggle("hidden", !visible);
+    }
+
+    function applyPairPreset() {
+      const pair = value("pairPreset");
+
+      if (pair === "custom") {
+        isCustomMode = true;
+        labelA = "溶媒A";
+        labelB = "溶媒B";
+
+        document.getElementById("solventSelectBlock").classList.add("hidden");
+        document.getElementById("customNote").classList.remove("hidden");
+
+        document.getElementById("mwA").value = "";
+        document.getElementById("mwB").value = "";
+        document.getElementById("densityA").value = "";
+        document.getElementById("densityB").value = "";
+        document.getElementById("currentAProtons").value = 1;
+        document.getElementById("currentBProtons").value = 1;
+        document.getElementById("targetAProtons").value = 1;
+        document.getElementById("targetBProtons").value = 1;
+
+        updateLabels();
+        calculate();
+        return;
+      }
+
+      isCustomMode = false;
+      document.getElementById("solventSelectBlock").classList.remove("hidden");
+      document.getElementById("customNote").classList.add("hidden");
+
+      const [a, b] = pair.split("|");
+      document.getElementById("solventA").value = a;
+      document.getElementById("solventB").value = b;
+      applySolvent("A", false);
+      applySolvent("B", false);
+      calculate();
+    }
+
+    function applySolvent(side, shouldCalculate = true) {
+      if (isCustomMode) return;
+
+      const key = value(`solvent${side}`);
+      const s = solvents[key];
+
+      if (side === "A") {
+        labelA = s.name;
+        document.getElementById("mwA").value = s.mw;
+        document.getElementById("densityA").value = s.density;
+        document.getElementById("currentAProtons").value = s.protons;
+        document.getElementById("targetAProtons").value = s.protons;
+      } else {
+        labelB = s.name;
+        document.getElementById("mwB").value = s.mw;
+        document.getElementById("densityB").value = s.density;
+        document.getElementById("currentBProtons").value = s.protons;
+        document.getElementById("targetBProtons").value = s.protons;
+      }
+
+      updateLabels();
+      if (shouldCalculate) calculate();
+    }
+
+    function updateLabels() {
+      const A = labelA || "溶媒A";
+      const B = labelB || "溶媒B";
+
+      document.getElementById("mwALabel").textContent = `${A}のモル質量 g/mol`;
+      document.getElementById("mwBLabel").textContent = `${B}のモル質量 g/mol`;
+      document.getElementById("densityALabel").textContent = `${A}の密度 g/mL`;
+      document.getElementById("densityBLabel").textContent = `${B}の密度 g/mL`;
+
+      document.getElementById("currentIntegralALabel").textContent = `${A}の積分値`;
+      document.getElementById("currentIntegralBLabel").textContent = `${B}の積分値`;
+      document.getElementById("currentProtonsALabel").textContent = `${A}の対象ピークH数`;
+      document.getElementById("currentProtonsBLabel").textContent = `${B}の対象ピークH数`;
+
+      document.getElementById("currentVolALabel").textContent = `現在の${A}体積比`;
+      document.getElementById("currentVolBLabel").textContent = `現在の${B}体積比`;
+
+      document.getElementById("targetVolALabel").textContent = `目標の${A}体積比`;
+      document.getElementById("targetVolBLabel").textContent = `目標の${B}体積比`;
+
+      document.getElementById("targetIntegralALabel").textContent = `目標の${A}積分値`;
+      document.getElementById("targetIntegralBLabel").textContent = `目標の${B}積分値`;
+      document.getElementById("targetProtonsALabel").textContent = `${A}の対象ピークH数`;
+      document.getElementById("targetProtonsBLabel").textContent = `${B}の対象ピークH数`;
     }
 
     function toggleInputMode() {
@@ -416,29 +578,36 @@
 
       show("targetVolumeBlock", targetMode === "volume");
       show("targetNmrBlock", targetMode === "nmr");
+      calculate();
     }
 
     function validatePositive(numbers) {
       return numbers.every(x => Number.isFinite(x) && x > 0);
     }
 
-    function nmrToVolumeRatio(eaIntegral, hexIntegral, eaMW, hexMW, eaDensity, hexDensity) {
-      const eaVolUnit = eaIntegral * eaMW / eaDensity;
-      const hexVolUnit = hexIntegral * hexMW / hexDensity;
+    function nmrToVolumeRatio(aIntegral, bIntegral, aProtons, bProtons, mwA, mwB, densityA, densityB) {
+      const aMoles = aIntegral / aProtons;
+      const bMoles = bIntegral / bProtons;
+      const aVolUnit = aMoles * mwA / densityA;
+      const bVolUnit = bMoles * mwB / densityB;
       return {
-        eaRatio: eaVolUnit,
-        hexRatio: hexVolUnit,
-        eaFraction: eaVolUnit / (eaVolUnit + hexVolUnit),
-        hexFraction: hexVolUnit / (eaVolUnit + hexVolUnit)
+        aRatio: aVolUnit,
+        bRatio: bVolUnit,
+        aMoles,
+        bMoles,
+        aFraction: aVolUnit / (aVolUnit + bVolUnit),
+        bFraction: bVolUnit / (aVolUnit + bVolUnit)
       };
     }
 
-    function volumeRatioToFraction(eaRatio, hexRatio) {
+    function volumeRatioToFraction(aRatio, bRatio) {
       return {
-        eaRatio,
-        hexRatio,
-        eaFraction: eaRatio / (eaRatio + hexRatio),
-        hexFraction: hexRatio / (eaRatio + hexRatio)
+        aRatio,
+        bRatio,
+        aMoles: null,
+        bMoles: null,
+        aFraction: aRatio / (aRatio + bRatio),
+        bFraction: bRatio / (aRatio + bRatio)
       };
     }
 
@@ -446,30 +615,34 @@
       const mode = value("currentInputMode");
       if (mode === "nmr") {
         return nmrToVolumeRatio(
-          n("currentEAIntegral"),
-          n("currentHexIntegral"),
-          n("eaMW"),
-          n("hexMW"),
-          n("eaDensity"),
-          n("hexDensity")
+          n("currentAIntegral"),
+          n("currentBIntegral"),
+          n("currentAProtons"),
+          n("currentBProtons"),
+          n("mwA"),
+          n("mwB"),
+          n("densityA"),
+          n("densityB")
         );
       }
-      return volumeRatioToFraction(n("currentEAVolRatio"), n("currentHexVolRatio"));
+      return volumeRatioToFraction(n("currentAVolRatio"), n("currentBVolRatio"));
     }
 
     function getTargetRatio() {
       const mode = value("targetInputMode");
       if (mode === "nmr") {
         return nmrToVolumeRatio(
-          n("targetEAIntegral"),
-          n("targetHexIntegral"),
-          n("eaMW"),
-          n("hexMW"),
-          n("eaDensity"),
-          n("hexDensity")
+          n("targetAIntegral"),
+          n("targetBIntegral"),
+          n("targetAProtons"),
+          n("targetBProtons"),
+          n("mwA"),
+          n("mwB"),
+          n("densityA"),
+          n("densityB")
         );
       }
-      return volumeRatioToFraction(n("targetEAVolRatio"), n("targetHexVolRatio"));
+      return volumeRatioToFraction(n("targetAVolRatio"), n("targetBVolRatio"));
     }
 
     function calculate() {
@@ -480,23 +653,18 @@
       const desiredFinalVolume = portionInput === "" ? totalVolume : Number(portionInput);
 
       const result = document.getElementById("result");
-
-      const commonValues = [totalVolume, desiredFinalVolume];
-
-      if (currentMode === "nmr" || targetMode === "nmr") {
-        commonValues.push(n("eaMW"), n("hexMW"), n("eaDensity"), n("hexDensity"));
-      }
+      const commonValues = [totalVolume, desiredFinalVolume, n("mwA"), n("mwB"), n("densityA"), n("densityB")];
 
       if (currentMode === "nmr") {
-        commonValues.push(n("currentEAIntegral"), n("currentHexIntegral"));
+        commonValues.push(n("currentAIntegral"), n("currentBIntegral"), n("currentAProtons"), n("currentBProtons"));
       } else {
-        commonValues.push(n("currentEAVolRatio"), n("currentHexVolRatio"));
+        commonValues.push(n("currentAVolRatio"), n("currentBVolRatio"));
       }
 
       if (targetMode === "nmr") {
-        commonValues.push(n("targetEAIntegral"), n("targetHexIntegral"));
+        commonValues.push(n("targetAIntegral"), n("targetBIntegral"), n("targetAProtons"), n("targetBProtons"));
       } else {
-        commonValues.push(n("targetEAVolRatio"), n("targetHexVolRatio"));
+        commonValues.push(n("targetAVolRatio"), n("targetBVolRatio"));
       }
 
       if (!validatePositive(commonValues)) {
@@ -504,58 +672,57 @@
           <div class="result-card warn">
             <h3>入力エラー</h3>
             <p class="error">表示されている入力欄には、すべて正の数を入力してください。</p>
+            <p>自由入力を使う場合は、モル質量・密度・対象ピークH数を入力してください。</p>
           </div>
         `;
         return;
       }
 
+      const A = labelA || "溶媒A";
+      const B = labelB || "溶媒B";
+
       const current = getCurrentRatio();
       const target = getTargetRatio();
 
-      const currentEAFraction = current.eaFraction;
-      const currentHexFraction = current.hexFraction;
-      const targetEAFraction = target.eaFraction;
-      const targetHexFraction = target.hexFraction;
+      const currentAFraction = current.aFraction;
+      const currentBFraction = current.bFraction;
+      const targetAFraction = target.aFraction;
+      const targetBFraction = target.bFraction;
 
-      const currentEAVolume = totalVolume * currentEAFraction;
-      const currentHexVolume = totalVolume * currentHexFraction;
+      const currentAVolume = totalVolume * currentAFraction;
+      const currentBVolume = totalVolume * currentBFraction;
 
-      // 方法1：今ある全量に、そのまま片方だけを足す
-      const addEA_direct = Math.max(0, currentHexVolume * targetEAFraction / targetHexFraction - currentEAVolume);
-      const addHex_direct = Math.max(0, currentEAVolume * targetHexFraction / targetEAFraction - currentHexVolume);
-      const directAddVolume = addEA_direct + addHex_direct;
+      const addA_direct = Math.max(0, currentBVolume * targetAFraction / targetBFraction - currentAVolume);
+      const addB_direct = Math.max(0, currentAVolume * targetBFraction / targetAFraction - currentBVolume);
+      const directAddVolume = addA_direct + addB_direct;
       const directFinalTotal = totalVolume + directAddVolume;
 
-      // 方法2：指定した最終体積になるように、混合液を一部取り分けて片方だけを足す
-      const targetEAVolume_portion = desiredFinalVolume * targetEAFraction;
-      const targetHexVolume_portion = desiredFinalVolume * targetHexFraction;
+      const targetAVolume_portion = desiredFinalVolume * targetAFraction;
+      const targetBVolume_portion = desiredFinalVolume * targetBFraction;
 
       let takeVolume = 0;
-      let addEA_portion = 0;
-      let addHex_portion = 0;
+      let addA_portion = 0;
+      let addB_portion = 0;
       let portionWarning = "";
 
-      if (Math.abs(currentEAFraction - targetEAFraction) < 0.0000001) {
+      if (Math.abs(currentAFraction - targetAFraction) < 0.0000001) {
         takeVolume = Math.min(totalVolume, desiredFinalVolume);
-
         if (desiredFinalVolume <= totalVolume) {
-          addEA_portion = 0;
-          addHex_portion = 0;
+          addA_portion = 0;
+          addB_portion = 0;
         } else {
-          portionWarning = "すでに目標比ですが、指定した最終体積が現在量より大きいため、酢酸エチルとヘキサンの両方を目標比で加える必要があります。";
+          portionWarning = "すでに目標比ですが、指定した最終体積が現在量より大きいため、溶媒Aと溶媒Bの両方を目標比で加える必要があります。";
         }
-      } else if (currentEAFraction > targetEAFraction) {
-        // 現在の混合液は酢酸エチルが濃い → 酢酸エチル量を基準に取り分け、ヘキサンを足す
-        takeVolume = targetEAVolume_portion / currentEAFraction;
-        addHex_portion = desiredFinalVolume - takeVolume;
+      } else if (currentAFraction > targetAFraction) {
+        takeVolume = targetAVolume_portion / currentAFraction;
+        addB_portion = desiredFinalVolume - takeVolume;
       } else {
-        // 現在の混合液はヘキサンが濃い → ヘキサン量を基準に取り分け、酢酸エチルを足す
-        takeVolume = targetHexVolume_portion / currentHexFraction;
-        addEA_portion = desiredFinalVolume - takeVolume;
+        takeVolume = targetBVolume_portion / currentBFraction;
+        addA_portion = desiredFinalVolume - takeVolume;
       }
 
-      addEA_portion = Math.max(0, addEA_portion);
-      addHex_portion = Math.max(0, addHex_portion);
+      addA_portion = Math.max(0, addA_portion);
+      addB_portion = Math.max(0, addB_portion);
 
       if (!portionWarning && takeVolume > totalVolume + 0.0000001) {
         portionWarning = "指定した最終体積では、今ある混合液の量が足りません。作りたい最終体積を小さくしてください。";
@@ -567,21 +734,21 @@
         ? "そのまま足すと加える量が大きく、最終体積が増えすぎるためです。"
         : "そのまま足す場合の追加量が大きすぎないためです。";
 
-      const directSolvent = solventName(addEA_direct, addHex_direct);
-      const portionSolvent = solventName(addEA_portion, addHex_portion);
+      const directSolvent = solventName(addA_direct, addB_direct);
+      const portionSolvent = solventName(addA_portion, addB_portion);
 
       const ratioExplanation = `
         <div class="result-card">
           <h3>現在比・目標比の変換結果</h3>
           <table class="small-table">
-            <tr><th>現在の酢酸エチル体積比</th><td>${fmtRatio(current.eaRatio)}</td></tr>
-            <tr><th>現在のヘキサン体積比</th><td>${fmtRatio(current.hexRatio)}</td></tr>
-            <tr><th>現在の酢酸エチル割合</th><td>${fmt(currentEAFraction * 100)} %</td></tr>
-            <tr><th>現在のヘキサン割合</th><td>${fmt(currentHexFraction * 100)} %</td></tr>
-            <tr><th>目標の酢酸エチル体積比</th><td>${fmtRatio(target.eaRatio)}</td></tr>
-            <tr><th>目標のヘキサン体積比</th><td>${fmtRatio(target.hexRatio)}</td></tr>
-            <tr><th>目標の酢酸エチル割合</th><td>${fmt(targetEAFraction * 100)} %</td></tr>
-            <tr><th>目標のヘキサン割合</th><td>${fmt(targetHexFraction * 100)} %</td></tr>
+            <tr><th>現在の${A}体積比</th><td>${fmtRatio(current.aRatio)}</td></tr>
+            <tr><th>現在の${B}体積比</th><td>${fmtRatio(current.bRatio)}</td></tr>
+            <tr><th>現在の${A}割合</th><td>${fmt(currentAFraction * 100)} %</td></tr>
+            <tr><th>現在の${B}割合</th><td>${fmt(currentBFraction * 100)} %</td></tr>
+            <tr><th>目標の${A}体積比</th><td>${fmtRatio(target.aRatio)}</td></tr>
+            <tr><th>目標の${B}体積比</th><td>${fmtRatio(target.bRatio)}</td></tr>
+            <tr><th>目標の${A}割合</th><td>${fmt(targetAFraction * 100)} %</td></tr>
+            <tr><th>目標の${B}割合</th><td>${fmt(targetBFraction * 100)} %</td></tr>
           </table>
         </div>
       `;
@@ -603,10 +770,10 @@
               : `<div class="big">${directSolvent}を ${fmt(directAddVolume)} mL 加える</div>`
           }
           <table class="small-table">
-            <tr><th>現在の酢酸エチル量</th><td>${fmt(currentEAVolume)} mL</td></tr>
-            <tr><th>現在のヘキサン量</th><td>${fmt(currentHexVolume)} mL</td></tr>
-            <tr><th>加える酢酸エチル量</th><td>${fmt(addEA_direct)} mL</td></tr>
-            <tr><th>加えるヘキサン量</th><td>${fmt(addHex_direct)} mL</td></tr>
+            <tr><th>現在の${A}量</th><td>${fmt(currentAVolume)} mL</td></tr>
+            <tr><th>現在の${B}量</th><td>${fmt(currentBVolume)} mL</td></tr>
+            <tr><th>加える${A}量</th><td>${fmt(addA_direct)} mL</td></tr>
+            <tr><th>加える${B}量</th><td>${fmt(addB_direct)} mL</td></tr>
             <tr><th>最終体積</th><td>${fmt(directFinalTotal)} mL</td></tr>
           </table>
         </div>
@@ -619,16 +786,16 @@
               : `
                 <div class="big">混合液を ${fmt(takeVolume)} mL 取る</div>
                 ${
-                  addEA_portion + addHex_portion === 0
+                  addA_portion + addB_portion === 0
                     ? `<p>追加は不要です。取り分けた時点で目標比です。</p>`
-                    : `<p><strong>${portionSolvent}を ${fmt(addEA_portion + addHex_portion)} mL 加える</strong></p>`
+                    : `<p><strong>${portionSolvent}を ${fmt(addA_portion + addB_portion)} mL 加える</strong></p>`
                 }
                 <table class="small-table">
                   <tr><th>作りたい最終体積</th><td>${fmt(desiredFinalVolume)} mL</td></tr>
                   <tr><th>取り分ける混合液量</th><td>${fmt(takeVolume)} mL</td></tr>
-                  <tr><th>加える酢酸エチル量</th><td>${fmt(addEA_portion)} mL</td></tr>
-                  <tr><th>加えるヘキサン量</th><td>${fmt(addHex_portion)} mL</td></tr>
-                  <tr><th>調製後の最終体積</th><td>${fmt(takeVolume + addEA_portion + addHex_portion)} mL</td></tr>
+                  <tr><th>加える${A}量</th><td>${fmt(addA_portion)} mL</td></tr>
+                  <tr><th>加える${B}量</th><td>${fmt(addB_portion)} mL</td></tr>
+                  <tr><th>調製後の最終体積</th><td>${fmt(takeVolume + addA_portion + addB_portion)} mL</td></tr>
                 </table>
               `
           }
@@ -637,34 +804,47 @@
     }
 
     function resetExample() {
+      document.getElementById("pairPreset").value = "hexane|ethyl_acetate";
+      isCustomMode = false;
+      document.getElementById("solventSelectBlock").classList.remove("hidden");
+      document.getElementById("customNote").classList.add("hidden");
+
+      document.getElementById("solventA").value = "hexane";
+      document.getElementById("solventB").value = "ethyl_acetate";
+      applySolvent("A", false);
+      applySolvent("B", false);
+
       document.getElementById("currentInputMode").value = "nmr";
       document.getElementById("targetInputMode").value = "volume";
 
-      document.getElementById("currentEAIntegral").value = 9;
-      document.getElementById("currentHexIntegral").value = 1;
+      document.getElementById("currentAIntegral").value = 1;
+      document.getElementById("currentBIntegral").value = 1;
+      document.getElementById("currentAProtons").value = 6;
+      document.getElementById("currentBProtons").value = 3;
 
-      document.getElementById("currentEAVolRatio").value = 9;
-      document.getElementById("currentHexVolRatio").value = 1;
-
-      document.getElementById("eaMW").value = 88.11;
-      document.getElementById("hexMW").value = 86.18;
-      document.getElementById("eaDensity").value = 0.902;
-      document.getElementById("hexDensity").value = 0.659;
+      document.getElementById("currentAVolRatio").value = 9;
+      document.getElementById("currentBVolRatio").value = 1;
 
       document.getElementById("totalVolume").value = 10;
 
-      document.getElementById("targetEAVolRatio").value = 1;
-      document.getElementById("targetHexVolRatio").value = 9;
-      document.getElementById("targetEAIntegral").value = 1;
-      document.getElementById("targetHexIntegral").value = 9;
+      document.getElementById("targetAVolRatio").value = 9;
+      document.getElementById("targetBVolRatio").value = 1;
+
+      document.getElementById("targetAIntegral").value = 1;
+      document.getElementById("targetBIntegral").value = 1;
+      document.getElementById("targetAProtons").value = 6;
+      document.getElementById("targetBProtons").value = 3;
 
       document.getElementById("portionFinalVolume").value = "";
 
       toggleInputMode();
+      updateLabels();
       calculate();
     }
 
+    initSolventSelects();
     toggleInputMode();
+    updateLabels();
     calculate();
   </script>
 </body>
