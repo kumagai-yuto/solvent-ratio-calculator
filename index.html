@@ -87,7 +87,7 @@
       font-weight: 700;
     }
 
-    input, select {
+    input {
       width: 100%;
       margin-top: 5px;
       padding: 10px 11px;
@@ -97,7 +97,7 @@
       background: #fff;
     }
 
-    input:focus, select:focus {
+    input:focus {
       outline: 2px solid rgba(37, 99, 235, 0.22);
       border-color: var(--main);
     }
@@ -217,7 +217,7 @@
 <body>
   <header>
     <h1>酢酸エチル・ヘキサン混合比 計算ツール</h1>
-    <p>現在の混合液に、片方の溶媒を足して目標比にする計算をします。</p>
+    <p>現在の混合液から、目標比にするための追加量・取り分け量を計算します。</p>
   </header>
 
   <main>
@@ -243,7 +243,7 @@
       </div>
 
       <div class="card">
-        <h2>目標の比</h2>
+        <h2>目標条件</h2>
 
         <div class="row">
           <div>
@@ -256,17 +256,10 @@
           </div>
         </div>
 
-        <label for="portionFinalVolume">取り分け調製後の最終体積 mL</label>
+        <label for="portionFinalVolume">取り分け調製で作りたい最終体積 mL</label>
         <input id="portionFinalVolume" type="number" min="0" step="any" placeholder="空欄なら現在の全体積と同じ" />
 
-        <label for="warningRatio">警告を出す基準</label>
-        <select id="warningRatio">
-          <option value="0.5">加える量が現在量の50%以上</option>
-          <option value="1">加える量が現在量の100%以上</option>
-          <option value="0.25">加える量が現在量の25%以上</option>
-        </select>
-
-        <p class="hint">取り分け後の最終体積を空欄にすると、現在の全体積と同じ量で作る計算になります。</p>
+        <p class="hint">この値は「方法2：取り分けて調製」の計算に反映されます。空欄の場合は、現在の全体積と同じ量を作ります。</p>
       </div>
     </section>
 
@@ -283,11 +276,13 @@
     </section>
 
     <p class="footer-note">
-      ※この計算は体積加成性を仮定しています。厳密な密度変化や収縮は考慮していません。
+      ※この計算は体積加成性を仮定しています。厳密な密度変化や体積収縮は考慮していません。
     </p>
   </main>
 
   <script>
+    const LARGE_ADDITION_RATIO = 0.5; // 加える量が現在量の50%以上なら取り分け調製をおすすめする
+
     function n(id) {
       return Number(document.getElementById(id).value);
     }
@@ -310,10 +305,9 @@
       const totalVolume = n("totalVolume");
       const targetEA = n("targetEA");
       const targetHex = n("targetHex");
-      const warningRatio = n("warningRatio");
 
       const portionInput = document.getElementById("portionFinalVolume").value;
-      const portionFinalVolume = portionInput === "" ? totalVolume : Number(portionInput);
+      const desiredFinalVolume = portionInput === "" ? totalVolume : Number(portionInput);
 
       const result = document.getElementById("result");
 
@@ -321,7 +315,7 @@
         currentEA <= 0 || currentHex <= 0 ||
         totalVolume <= 0 ||
         targetEA <= 0 || targetHex <= 0 ||
-        portionFinalVolume <= 0
+        desiredFinalVolume <= 0
       ) {
         result.innerHTML = `
           <div class="result-card warn">
@@ -340,48 +334,54 @@
       const currentEAVolume = totalVolume * currentEAFraction;
       const currentHexVolume = totalVolume * currentHexFraction;
 
+      // 方法1：今ある全量に、そのまま片方だけを足す
       const addEA_direct = Math.max(0, currentHexVolume * targetEA / targetHex - currentEAVolume);
       const addHex_direct = Math.max(0, currentEAVolume * targetHex / targetEA - currentHexVolume);
       const directAddVolume = addEA_direct + addHex_direct;
       const directFinalTotal = totalVolume + directAddVolume;
 
-      const targetEAVolume_portion = portionFinalVolume * targetEAFraction;
-      const targetHexVolume_portion = portionFinalVolume * targetHexFraction;
+      // 方法2：指定した最終体積になるように、混合液を一部取り分けて片方だけを足す
+      const targetEAVolume_portion = desiredFinalVolume * targetEAFraction;
+      const targetHexVolume_portion = desiredFinalVolume * targetHexFraction;
 
-      let takeVolume;
+      let takeVolume = 0;
       let addEA_portion = 0;
       let addHex_portion = 0;
       let portionWarning = "";
 
-      if (currentEAFraction > targetEAFraction) {
+      if (Math.abs(currentEAFraction - targetEAFraction) < 0.0000001) {
+        // すでに目標比
+        takeVolume = Math.min(totalVolume, desiredFinalVolume);
+
+        if (desiredFinalVolume <= totalVolume) {
+          addEA_portion = 0;
+          addHex_portion = 0;
+        } else {
+          // 目標比のまま増量する場合は、純溶媒1種類だけでは比を保てない
+          portionWarning = "すでに目標比ですが、指定した最終体積が現在量より大きいため、酢酸エチルとヘキサンの両方を目標比で加える必要があります。";
+        }
+      } else if (currentEAFraction > targetEAFraction) {
         // 現在の混合液は酢酸エチルが濃い → 酢酸エチル量を基準に取り分け、ヘキサンを足す
         takeVolume = targetEAVolume_portion / currentEAFraction;
-        addHex_portion = targetHexVolume_portion - takeVolume * currentHexFraction;
-      } else if (currentEAFraction < targetEAFraction) {
+        addHex_portion = desiredFinalVolume - takeVolume;
+      } else {
         // 現在の混合液はヘキサンが濃い → ヘキサン量を基準に取り分け、酢酸エチルを足す
         takeVolume = targetHexVolume_portion / currentHexFraction;
-        addEA_portion = targetEAVolume_portion - takeVolume * currentEAFraction;
-      } else {
-        // すでに目標比
-        takeVolume = Math.min(totalVolume, portionFinalVolume);
-        if (portionFinalVolume > totalVolume) {
-          // 目標比のまま増量するなら両方を足す必要が出るが、このツールは片方追加が基本
-          portionWarning = "すでに目標比です。増量したい場合は、酢酸エチルとヘキサンの両方を目標比で加えてください。";
-        }
+        addEA_portion = desiredFinalVolume - takeVolume;
       }
 
       addEA_portion = Math.max(0, addEA_portion);
       addHex_portion = Math.max(0, addHex_portion);
 
-      if (takeVolume > totalVolume + 0.0000001) {
-        portionWarning = "指定した取り分け後の最終体積では、今ある混合液の量が足りません。取り分け後の最終体積を小さくしてください。";
+      if (!portionWarning && takeVolume > totalVolume + 0.0000001) {
+        portionWarning = "指定した最終体積では、今ある混合液の量が足りません。作りたい最終体積を小さくしてください。";
       }
 
-      const isLargeAddition = directAddVolume > totalVolume * warningRatio;
+      const isLargeAddition = directAddVolume > totalVolume * LARGE_ADDITION_RATIO;
       const recommendation = isLargeAddition ? "取り分け調製がおすすめ" : "そのまま足す方法で十分";
       const reason = isLargeAddition
         ? "そのまま足すと加える量が大きく、最終体積が増えすぎるためです。"
-        : "加える量が現在の全体積に対して大きすぎないためです。";
+        : "そのまま足す場合の追加量が大きすぎないためです。";
 
       const directSolvent = solventName(addEA_direct, addHex_direct);
       const portionSolvent = solventName(addEA_portion, addHex_portion);
@@ -418,14 +418,15 @@
                 <div class="big">混合液を ${fmt(takeVolume)} mL 取る</div>
                 ${
                   addEA_portion + addHex_portion === 0
-                    ? `<p>追加は不要です。</p>`
+                    ? `<p>追加は不要です。取り分けた時点で目標比です。</p>`
                     : `<p><strong>${portionSolvent}を ${fmt(addEA_portion + addHex_portion)} mL 加える</strong></p>`
                 }
                 <table class="small-table">
+                  <tr><th>作りたい最終体積</th><td>${fmt(desiredFinalVolume)} mL</td></tr>
                   <tr><th>取り分ける混合液量</th><td>${fmt(takeVolume)} mL</td></tr>
                   <tr><th>加える酢酸エチル量</th><td>${fmt(addEA_portion)} mL</td></tr>
                   <tr><th>加えるヘキサン量</th><td>${fmt(addHex_portion)} mL</td></tr>
-                  <tr><th>調製後の最終体積</th><td>${fmt(portionFinalVolume)} mL</td></tr>
+                  <tr><th>調製後の最終体積</th><td>${fmt(takeVolume + addEA_portion + addHex_portion)} mL</td></tr>
                 </table>
               `
           }
@@ -440,7 +441,6 @@
       document.getElementById("targetEA").value = 1;
       document.getElementById("targetHex").value = 9;
       document.getElementById("portionFinalVolume").value = "";
-      document.getElementById("warningRatio").value = "0.5";
       calculate();
     }
 
