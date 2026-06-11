@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>酢酸エチル・ヘキサン混合比 計算ツール</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --sub: #6b7280;
+      --border: #d1d5db;
+      --main: #2563eb;
+      --main-dark: #1d4ed8;
+      --soft: #eff6ff;
+      --warn-bg: #fff7ed;
+      --warn-border: #fb923c;
+      --danger: #b91c1c;
+      --ok-bg: #ecfdf5;
+      --ok-border: #34d399;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 28px 16px 16px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      color: var(--sub);
+      font-size: 14px;
+    }
+
+    main {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input, select {
+      width: 100%;
+      margin-top: 5px;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      background: #fff;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.22);
+      border-color: var(--main);
+    }
+
+    .hint {
+      margin-top: 8px;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      color: white;
+      background: var(--main);
+    }
+
+    .primary:hover {
+      background: var(--main-dark);
+    }
+
+    .secondary {
+      color: var(--text);
+      background: #e5e7eb;
+    }
+
+    .result {
+      margin-top: 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .result-card {
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid #dbeafe;
+      background: var(--soft);
+    }
+
+    .result-card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+    }
+
+    .result-card.recommend {
+      background: var(--ok-bg);
+      border-color: var(--ok-border);
+    }
+
+    .result-card.warn {
+      background: var(--warn-bg);
+      border-color: var(--warn-border);
+    }
+
+    .big {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 6px 0;
+    }
+
+    .small-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .small-table th,
+    .small-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      text-align: left;
+    }
+
+    .small-table th {
+      color: var(--sub);
+      font-weight: 700;
+      width: 48%;
+    }
+
+    .error {
+      color: var(--danger);
+      font-weight: 800;
+    }
+
+    .footer-note {
+      margin: 18px 0 0;
+      color: var(--sub);
+      font-size: 13px;
+    }
+
+    @media (max-width: 720px) {
+      .grid, .row, .actions {
+        grid-template-columns: 1fr;
+      }
+
+      header h1 {
+        font-size: 21px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>酢酸エチル・ヘキサン混合比 計算ツール</h1>
+    <p>現在の混合液に、片方の溶媒を足して目標比にする計算をします。</p>
+  </header>
+
+  <main>
+    <section class="grid">
+      <div class="card">
+        <h2>現在の混合溶液</h2>
+
+        <div class="row">
+          <div>
+            <label for="currentEA">現在の酢酸エチル比</label>
+            <input id="currentEA" type="number" min="0" step="any" value="9" />
+          </div>
+          <div>
+            <label for="currentHex">現在のヘキサン比</label>
+            <input id="currentHex" type="number" min="0" step="any" value="1" />
+          </div>
+        </div>
+
+        <label for="totalVolume">現在の全体積 mL</label>
+        <input id="totalVolume" type="number" min="0" step="any" value="10" />
+
+        <p class="hint">例：酢酸エチル：ヘキサン = 9：1、全体積 10 mL</p>
+      </div>
+
+      <div class="card">
+        <h2>目標の比</h2>
+
+        <div class="row">
+          <div>
+            <label for="targetEA">目標の酢酸エチル比</label>
+            <input id="targetEA" type="number" min="0" step="any" value="1" />
+          </div>
+          <div>
+            <label for="targetHex">目標のヘキサン比</label>
+            <input id="targetHex" type="number" min="0" step="any" value="9" />
+          </div>
+        </div>
+
+        <label for="portionFinalVolume">取り分け調製後の最終体積 mL</label>
+        <input id="portionFinalVolume" type="number" min="0" step="any" placeholder="空欄なら現在の全体積と同じ" />
+
+        <label for="warningRatio">警告を出す基準</label>
+        <select id="warningRatio">
+          <option value="0.5">加える量が現在量の50%以上</option>
+          <option value="1">加える量が現在量の100%以上</option>
+          <option value="0.25">加える量が現在量の25%以上</option>
+        </select>
+
+        <p class="hint">取り分け後の最終体積を空欄にすると、現在の全体積と同じ量で作る計算になります。</p>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="primary" onclick="calculate()">計算する</button>
+      <button class="secondary" onclick="resetExample()">例に戻す</button>
+    </div>
+
+    <section id="result" class="result">
+      <div class="result-card">
+        <h3>結果</h3>
+        <p>数値を入力して「計算する」を押してください。</p>
+      </div>
+    </section>
+
+    <p class="footer-note">
+      ※この計算は体積加成性を仮定しています。厳密な密度変化や収縮は考慮していません。
+    </p>
+  </main>
+
+  <script>
+    function n(id) {
+      return Number(document.getElementById(id).value);
+    }
+
+    function fmt(x) {
+      if (!Number.isFinite(x)) return "-";
+      if (Math.abs(x) < 0.0000001) x = 0;
+      return x.toFixed(2);
+    }
+
+    function solventName(addEA, addHex) {
+      if (addEA > addHex) return "酢酸エチル";
+      if (addHex > addEA) return "ヘキサン";
+      return "なし";
+    }
+
+    function calculate() {
+      const currentEA = n("currentEA");
+      const currentHex = n("currentHex");
+      const totalVolume = n("totalVolume");
+      const targetEA = n("targetEA");
+      const targetHex = n("targetHex");
+      const warningRatio = n("warningRatio");
+
+      const portionInput = document.getElementById("portionFinalVolume").value;
+      const portionFinalVolume = portionInput === "" ? totalVolume : Number(portionInput);
+
+      const result = document.getElementById("result");
+
+      if (
+        currentEA <= 0 || currentHex <= 0 ||
+        totalVolume <= 0 ||
+        targetEA <= 0 || targetHex <= 0 ||
+        portionFinalVolume <= 0
+      ) {
+        result.innerHTML = `
+          <div class="result-card warn">
+            <h3>入力エラー</h3>
+            <p class="error">すべて正の数を入力してください。</p>
+          </div>
+        `;
+        return;
+      }
+
+      const currentEAFraction = currentEA / (currentEA + currentHex);
+      const currentHexFraction = currentHex / (currentEA + currentHex);
+      const targetEAFraction = targetEA / (targetEA + targetHex);
+      const targetHexFraction = targetHex / (targetEA + targetHex);
+
+      const currentEAVolume = totalVolume * currentEAFraction;
+      const currentHexVolume = totalVolume * currentHexFraction;
+
+      const addEA_direct = Math.max(0, currentHexVolume * targetEA / targetHex - currentEAVolume);
+      const addHex_direct = Math.max(0, currentEAVolume * targetHex / targetEA - currentHexVolume);
+      const directAddVolume = addEA_direct + addHex_direct;
+      const directFinalTotal = totalVolume + directAddVolume;
+
+      const targetEAVolume_portion = portionFinalVolume * targetEAFraction;
+      const targetHexVolume_portion = portionFinalVolume * targetHexFraction;
+
+      let takeVolume;
+      let addEA_portion = 0;
+      let addHex_portion = 0;
+      let portionWarning = "";
+
+      if (currentEAFraction > targetEAFraction) {
+        // 現在の混合液は酢酸エチルが濃い → 酢酸エチル量を基準に取り分け、ヘキサンを足す
+        takeVolume = targetEAVolume_portion / currentEAFraction;
+        addHex_portion = targetHexVolume_portion - takeVolume * currentHexFraction;
+      } else if (currentEAFraction < targetEAFraction) {
+        // 現在の混合液はヘキサンが濃い → ヘキサン量を基準に取り分け、酢酸エチルを足す
+        takeVolume = targetHexVolume_portion / currentHexFraction;
+        addEA_portion = targetEAVolume_portion - takeVolume * currentEAFraction;
+      } else {
+        // すでに目標比
+        takeVolume = Math.min(totalVolume, portionFinalVolume);
+        if (portionFinalVolume > totalVolume) {
+          // 目標比のまま増量するなら両方を足す必要が出るが、このツールは片方追加が基本
+          portionWarning = "すでに目標比です。増量したい場合は、酢酸エチルとヘキサンの両方を目標比で加えてください。";
+        }
+      }
+
+      addEA_portion = Math.max(0, addEA_portion);
+      addHex_portion = Math.max(0, addHex_portion);
+
+      if (takeVolume > totalVolume + 0.0000001) {
+        portionWarning = "指定した取り分け後の最終体積では、今ある混合液の量が足りません。取り分け後の最終体積を小さくしてください。";
+      }
+
+      const isLargeAddition = directAddVolume > totalVolume * warningRatio;
+      const recommendation = isLargeAddition ? "取り分け調製がおすすめ" : "そのまま足す方法で十分";
+      const reason = isLargeAddition
+        ? "そのまま足すと加える量が大きく、最終体積が増えすぎるためです。"
+        : "加える量が現在の全体積に対して大きすぎないためです。";
+
+      const directSolvent = solventName(addEA_direct, addHex_direct);
+      const portionSolvent = solventName(addEA_portion, addHex_portion);
+
+      result.innerHTML = `
+        <div class="result-card recommend">
+          <h3>おすすめ</h3>
+          <div class="big">${recommendation}</div>
+          <p>${reason}</p>
+        </div>
+
+        <div class="result-card ${isLargeAddition ? "warn" : ""}">
+          <h3>方法1：そのまま足す</h3>
+          ${
+            directAddVolume === 0
+              ? `<div class="big">すでに目標比です</div>`
+              : `<div class="big">${directSolvent}を ${fmt(directAddVolume)} mL 加える</div>`
+          }
+          <table class="small-table">
+            <tr><th>現在の酢酸エチル量</th><td>${fmt(currentEAVolume)} mL</td></tr>
+            <tr><th>現在のヘキサン量</th><td>${fmt(currentHexVolume)} mL</td></tr>
+            <tr><th>加える酢酸エチル量</th><td>${fmt(addEA_direct)} mL</td></tr>
+            <tr><th>加えるヘキサン量</th><td>${fmt(addHex_direct)} mL</td></tr>
+            <tr><th>最終体積</th><td>${fmt(directFinalTotal)} mL</td></tr>
+          </table>
+        </div>
+
+        <div class="result-card">
+          <h3>方法2：取り分けて調製</h3>
+          ${
+            portionWarning
+              ? `<p class="error">${portionWarning}</p>`
+              : `
+                <div class="big">混合液を ${fmt(takeVolume)} mL 取る</div>
+                ${
+                  addEA_portion + addHex_portion === 0
+                    ? `<p>追加は不要です。</p>`
+                    : `<p><strong>${portionSolvent}を ${fmt(addEA_portion + addHex_portion)} mL 加える</strong></p>`
+                }
+                <table class="small-table">
+                  <tr><th>取り分ける混合液量</th><td>${fmt(takeVolume)} mL</td></tr>
+                  <tr><th>加える酢酸エチル量</th><td>${fmt(addEA_portion)} mL</td></tr>
+                  <tr><th>加えるヘキサン量</th><td>${fmt(addHex_portion)} mL</td></tr>
+                  <tr><th>調製後の最終体積</th><td>${fmt(portionFinalVolume)} mL</td></tr>
+                </table>
+              `
+          }
+        </div>
+      `;
+    }
+
+    function resetExample() {
+      document.getElementById("currentEA").value = 9;
+      document.getElementById("currentHex").value = 1;
+      document.getElementById("totalVolume").value = 10;
+      document.getElementById("targetEA").value = 1;
+      document.getElementById("targetHex").value = 9;
+      document.getElementById("portionFinalVolume").value = "";
+      document.getElementById("warningRatio").value = "0.5";
+      calculate();
+    }
+
+    calculate();
+  </script>
+</body>
+</html>
